@@ -56,3 +56,9 @@ Ltac set_result N T := match goal with | _ := ?X : box _ N |- _ => unify X T end
 Ltac get_result N := match goal with | _ := ?X : box _ N |- _ => X end.
 
 Ltac clear_result N := match goal with | H := _ : box _ N |- _ => clear H end.
+
+Ltac match_type_destruct T := 
+  match goal with
+  | [ |- ?X ] => match_type_context_destruct T X
+  | [ H : _ |- _ ] => let X := type of H in match_type_context_destruct T X
+  end.
