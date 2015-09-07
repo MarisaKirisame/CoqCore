@@ -24,6 +24,12 @@ Ltac get_match H F :=
   | context [match ?n with _ => _ end] => F n
   end.
 
+Ltac get_matches F := 
+  match goal with
+  | [ |- ?X ] => get_match X F
+  | [ H : ?X |- _ ] => get_match X F
+  end.
+
 Ltac match_type_context_destruct T C :=
   let F := (fun x => let x' := type of x in match x' with T => destruct x eqn:? end) in
     get_match C F.
@@ -57,8 +63,6 @@ Ltac get_result N := match goal with | _ := ?X : box _ N |- _ => X end.
 
 Ltac clear_result N := match goal with | H := _ : box _ N |- _ => clear H end.
 
-Ltac match_type_destruct T := 
-  match goal with
-  | [ |- ?X ] => match_type_context_destruct T X
-  | [ H : _ |- _ ] => let X := type of H in match_type_context_destruct T X
-  end.
+Ltac match_type_destruct T :=
+  let F := (fun x => let x' := type of x in match x' with T => destruct x eqn:? end) in
+    get_matches F.
