@@ -1,7 +1,7 @@
 Require Export JMeq Program.
 Set Implicit Arguments.
 
-Create HintDb MoreJMeq discriminated.
+Create HintDb MoreJMeq.
 Hint Extern 1 => progress subst : MoreJMeq.
 
 Definition eq_proj1_sig_eq (A : Type) (P : A -> Prop) (n m : {x : A | P x}) : n = m -> ` n = ` m
@@ -36,12 +36,7 @@ Qed.
 Hint Resolve JMeq_extensionality : MoreJMeq.
 
 Definition JMeq_proj1_eq T (A B : T -> Prop) (l : sig A) (r : sig B) :
-  A = B -> ` l = ` r -> l ~= r .
-  intros; subst.
-  apply eq_JMeq.
-  eauto with MoreJMeq.
-  eauto using proj1_sig_eq_eq.
-Qed.
+  A = B -> ` l = ` r -> l ~= r := $(intuition)$.
 
 Definition eq_JMeq_proj1_eq T (A B : T -> Prop) (l : sig A) (r : sig B) :
   A = B -> l ~= r -> ` l = ` r := $(intuition)$.
