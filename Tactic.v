@@ -19,16 +19,16 @@ Ltac InInvcs :=
 
 Ltac get_goal := match goal with |- ?x => x end.
 
-Ltac get_match H F := 
-  match H with
-  | context [match ?n with _ => _ end] => F n
-  end.
+Ltac get_match H F := match H with context [match ?n with _ => _ end] => F n end.
 
 Ltac get_matches F := 
   match goal with
   | [ |- ?X ] => get_match X F
   | [ H : ?X |- _ ] => get_match X F
   end.
+
+Ltac match_context_destruct C :=
+  let F := (fun x => destruct x eqn:?) in get_match C F.
 
 Ltac match_type_context_destruct T C :=
   let F := (fun x => let x' := type of x in match x' with T => destruct x eqn:? end) in
@@ -38,9 +38,7 @@ Definition box P NT (N : NT) : Type := P.
 
 Inductive sandbox_closer : Prop := ms : sandbox_closer -> sandbox_closer.
 
-Theorem sandbox_closer_exit : sandbox_closer -> False.
-  induction 1;trivial.
-Qed.
+Theorem sandbox_closer_exit : sandbox_closer -> False. induction 1;trivial. Qed.
 
 Arguments box : simpl never.
 
@@ -66,3 +64,21 @@ Ltac clear_result N := match goal with | H := _ : box _ N |- _ => clear H end.
 Ltac match_type_destruct T :=
   let F := (fun x => let x' := type of x in match x' with T => destruct x eqn:? end) in
     get_matches F.
+
+Ltac match_destruct := let F := (fun x => destruct x eqn:?) in get_matches F.
+
+Ltac ii := intuition idtac.
+
+Ltac cleanT T := 
+  repeat match goal with
+  | H : ?X |- _ => T X; clear H
+  end.
+
+Ltac isProp X := match type of X with Prop => idtac end.
+
+Ltac solvable G T := let f := fresh in assert(f : G) by T; clear f.
+
+Ltac removeone H := match goal with X : H |- _ => clear X end.
+
+Ltac cleanP T := 
+  let F := (fun x => isProp x; let Te := (removeone x; T) in solvable x Te) in cleanT F.

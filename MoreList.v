@@ -4,20 +4,13 @@ Set Implicit Arguments.
 Theorem foldl_distr : forall A (F : A -> A -> A) R l a,
   (forall r l, R (F l r) = F (R l) (R r)) ->
     fold_left (fun l r => F l (R r)) l (R a) = R (fold_left F l a).
-  induction l;
-  intros;
-  simpl in *;
-  subst;
-  trivial.
-  replace (F (R a0) (R a)) with (R (F a0 a)) by auto.
-  apply IHl;auto.
+  induction l; simpl in *; subst; intuition.
+  replace (F (R a0) (R a)) with (R (F a0 a)) by auto; auto.
 Qed.
 
 Theorem foldl_map : forall A B C (F : B -> C -> B) (R : A -> _) l a,
   fold_left (fun l r => F l r) (map R l) a = fold_left (fun l r => F l (R r)) l a.
-  induction l;
-  simpl in *;
-  trivial.
+  induction l; simpl in *; trivial.
 Qed.
 
 Definition Select := filter.
@@ -26,62 +19,25 @@ Definition Remove A := fun F : A -> bool => Select (fun e => negb (F e)).
 
 Theorem remove_Remove T (D : forall l r, { l = r } + { l <> r }) v :
   remove D v = Remove (fun e : T => if D e v then true else false).
-  intros.
   apply functional_extensionality.
-  induction x;
-  intros;
-  simpl in *;
-  repeat destruct D;
-  repeat subst;
-  simpl;
-  f_equal;
-  intuition.
+  induction x; intros; simpl in *; repeat destruct D; repeat subst;
+  simpl; f_equal; intuition.
 Qed.
 
 Theorem Select_Remove A (F : A -> bool) : Select F = Remove (fun e => negb (F e)).
   unfold Remove.
-  intros.
   f_equal.
   apply functional_extensionality.
-  intros.
-  destruct (F x);trivial.
+  intros; destruct (F x); trivial.
 Qed.
 
 Theorem nodup_Select_Select_nodup T (F : T -> bool) D l : 
   nodup D (Select F l) = Select F (nodup D l).
-  induction l;
-  simpl in *;
-  trivial;
-  repeat
-    (try match goal with
-    |- ?H => 
-        match H with
-        | context f [F ?x] => destruct (F x) eqn:?
-        | context f [in_dec ?l ?r] => destruct (in_dec l r)
-        end
-    end;
-    simpl in *;
-    trivial;
-    try solve [f_equal;trivial];
-    try discriminate).
+  induction l; simpl in *; trivial.
+  repeat (match_destruct || simpl in *; ii); try rewrite IHl.
+  cleanP admit.
   contradict n.
-  clear IHl.
-  induction l;
-  simpl in *;
-  intuition.
-  destruct (F a0);
-  simpl in *;
-  intuition.
-  contradict n.
-  clear IHl.
-  induction l;
-  simpl in *;
-  intuition;
-  subst;
-  try rewrite Heqb;
-  try destruct (F a0);
-  simpl;
-  intuition.
+  rewrite IHl in *.
 Qed.
 
 Theorem Select_app A l r (f : A -> bool) : Select f (l ++ r) = Select f l ++ Select f r.
