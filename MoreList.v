@@ -1,14 +1,17 @@
 Require Export List FunctionalExtensionality Tactic Program Omega Arith MoreJMeq.
 Set Implicit Arguments.
 
-Theorem foldl_distr : forall A (F : A -> A -> A) R l a,
+Create HintDb MoreList discriminated.
+Hint Extern 1 => f_equal : MoreList.
+
+Theorem foldl_distr A (F : A -> A -> A) R l : forall a,
   (forall r l, R (F l r) = F (R l) (R r)) ->
     fold_left (fun l r => F l (R r)) l (R a) = R (fold_left F l a).
   induction l; simpl in *; subst; intuition.
   replace (F (R a0) (R a)) with (R (F a0 a)) by auto; auto.
 Qed.
 
-Theorem foldl_map : forall A B C (F : B -> C -> B) (R : A -> _) l a,
+Theorem foldl_map A B C (F : B -> C -> B) (R : A -> _) l : forall a,
   fold_left (fun l r => F l r) (map R l) a = fold_left (fun l r => F l (R r)) l a.
   induction l; simpl in *; trivial.
 Qed.
@@ -25,46 +28,40 @@ Theorem remove_Remove T (D : forall l r, { l = r } + { l <> r }) v :
 Qed.
 
 Theorem Select_Remove A (F : A -> bool) : Select F = Remove (fun e => negb (F e)).
-  unfold Remove.
-  f_equal.
-  apply functional_extensionality.
-  intros; destruct (F x); trivial.
+  unfold Remove; f_equal.
+  extensionality x; intros; destruct (F x); trivial.
+Qed.
+
+Theorem In_Select_In A l e (f : A -> bool) : In e (Select f l) -> In e l.
+  intros; induction l; simpl in *; try destruct f; InInvcs.
+Qed.
+
+Theorem In_Select_Sat A l e (f : A -> bool) : In e (Select f l) -> f e = true.
+  intros; induction l; simpl in *; try match_destruct; InInvcs; subst; auto.
+Qed.
+
+Theorem In_Sat_Select_In A l e (f : A -> bool) : In e l -> f e = true -> In e (Select f l).
+  intros; induction l; simpl in *; try match_destruct; InInvcs; congruence.
 Qed.
 
 Theorem nodup_Select_Select_nodup T (F : T -> bool) D l : 
   nodup D (Select F l) = Select F (nodup D l).
   induction l; simpl in *; trivial.
-  repeat (match_destruct || simpl in *; ii); try rewrite IHl.
-  cleanP admit.
-  contradict n.
-  rewrite IHl in *.
+  repeat (match_destruct || simpl in *; ii); try rewrite IHl; auto;
+  let f := fun x => match x with (_ = in_left) => idtac | (_ = in_right) => idtac end in
+    cleanT f; intuition (try congruence).
+  eapply In_Sat_Select_In in i; eauto; tauto.
+  apply In_Select_In in i; intuition.
 Qed.
 
 Theorem Select_app A l r (f : A -> bool) : Select f (l ++ r) = Select f l ++ Select f r.
-  induction l;
-  simpl in *;
-  try destruct (f a);
-  intuition.
-  simpl.
-  f_equal;
-  trivial.
+  induction l; simpl in *; try destruct (f a); simpl; idtac + f_equal; solve [intuition].
 Qed.
 
 Theorem NoDup_In_In_False : forall A l r (e : A), NoDup (l ++ r) -> In e l -> In e r -> False.
-  intros.
-  induction l;
-  simpl in *;
-  intuition;
-  invcs H;
-  intuition.
-Qed.
-
-Theorem In_Select_In A l e (f : A -> bool) : In e (Select f l) -> In e l.
-  intros.
-  induction l;
-  simpl in *;
-  try destruct f;
-  InInvcs.
+  intros;
+  induction l; simpl in *; intuition;
+  invcs H; intuition.
 Qed.
 
 Program Definition nth_strong T (l : list T) nt (P : nt < length l) : 
@@ -80,28 +77,14 @@ Next Obligation.
 Qed.
 
 Theorem eq_eq_length T (l r : list T) : l = r -> length l = length r.
-  intros.
-  subst.
-  trivial.
+  intros; subst; trivial.
 Qed.
 
 Theorem nth_error_eq T (l r : list T) : (forall n, nth_error l n = nth_error r n) <-> l = r.
-  split.
-  revert r.
-  induction l;intros.
-  destruct r;trivial.
-  specialize(H 0);discriminate.
-  destruct r.
-  specialize(H 0);discriminate.
-  assert(a = t) by (specialize(H 0);invcs H;trivial).
-  subst.
-  f_equal.
-  apply IHl.
-  intros.
-  specialize(H (S n));trivial.
-  intros.
-  subst.
-  trivial.
+  split; intros; subst; trivial; generalize dependent r.
+  induction l; intros; destruct r; trivial; try (specialize(H 0);discriminate).
+  assert(a = t) by (specialize(H 0);invcs H;trivial); subst; f_equal.
+  apply IHl; intros; specialize(H (S n));trivial.
 Qed.
 
 Theorem foldl_extract A (F : A -> A -> A) li Z C :
@@ -109,18 +92,12 @@ Theorem foldl_extract A (F : A -> A -> A) li Z C :
     fold_left (fun l r => F l r) li (F Z C) =
     F (fold_left (fun l r => F l r) li Z) C.
   revert Z C.
-  induction li;
-  simpl;
-  intros;
-  trivial.
+  induction li; simpl; intros; trivial.
   rewrite IHli.
   clear IHli.
   revert Z a C.
-  induction li;
-  simpl;
-  intros.
-  apply H.
-  rewrite (IHli _ a0 a), (IHli _ C a).
+  induction li; simpl; intros; auto.
+  rewrite (IHli _ a0 a), (IHli _ C a); auto with f_equal.
   do 2 f_equal.
   all:auto.
 Qed.

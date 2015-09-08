@@ -7,13 +7,13 @@ Ltac invcsSome := repeat match goal with H : Some _ = Some _ |- _ => invcs H end
 
 Ltac decExists := repeat match goal with H : exists _, _ |- _ => destruct H end.
 
+Ltac ii := intuition idtac.
+
 Ltac InInvcs := 
   repeat(
-    simpl in *;
-    intuition;
+    simpl in *; ii;
     try match goal with
     | H : In _ (_ ++ _) |- _ => apply in_app_iff in H;destruct H
-    | |- In _ (_ :: _) => constructor
     | |- In _ (_ ++ _) => apply in_app_iff
     end).
 
@@ -67,18 +67,20 @@ Ltac match_type_destruct T :=
 
 Ltac match_destruct := let F := (fun x => destruct x eqn:?) in get_matches F.
 
-Ltac ii := intuition idtac.
-
 Ltac cleanT T := 
   repeat match goal with
   | H : ?X |- _ => T X; clear H
   end.
 
-Ltac isProp X := match type of X with Prop => idtac end.
+Ltac removeone H := match goal with X : H |- _ => clear X end.
 
 Ltac solvable G T := let f := fresh in assert(f : G) by T; clear f.
 
-Ltac removeone H := match goal with X : H |- _ => clear X end.
+Ltac cleanTS T := let F := (fun x => let Te := (removeone x; T) in solvable x Te) in cleanT F.
 
-Ltac cleanP T := 
-  let F := (fun x => isProp x; let Te := (removeone x; T) in solvable x Te) in cleanT F.
+Ltac isProp X := match type of X with Prop => idtac end.
+
+Ltac cleanP T := let F := (fun x => isProp x; T x) in cleanT T.
+
+Ltac cleanPS T := 
+  let F := (fun x => let Te := (removeone x; T) in solvable x Te) in cleanP F.
