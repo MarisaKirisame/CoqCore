@@ -10,12 +10,8 @@ Definition eq_JMeq T (l r : T) : l = r -> l ~= r := $(auto with MoreJMeq)$.
 
 Hint Resolve eq_JMeq functional_extensionality : MoreJMeq.
 
-Theorem JMeq_extensionality_l A B C (l : A -> C) (r : B -> C) :
-  (forall L R, L ~= R -> l L = r R) -> A = B -> l ~= r.
-  intros.
-  subst; auto with MoreJMeq.
-  (*debug auto 10 with MoreJMeq.*)
-Qed.
+Definition JMeq_extensionality_l A B C (l : A -> C) (r : B -> C) :
+  (forall L R, L ~= R -> l L = r R) -> A = B -> l ~= r := $(eauto with MoreJMeq)$.
 
 Theorem JMeq_extensionality_r A B C (l : A -> B) (r : A -> C) :
   (forall L R, L = R -> l L ~= r R) -> B = C -> l ~= r.
