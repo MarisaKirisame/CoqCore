@@ -59,9 +59,7 @@ Theorem Select_app A l r (f : A -> bool) : Select f (l ++ r) = Select f l ++ Sel
 Qed.
 
 Theorem NoDup_In_In_False : forall A l r (e : A), NoDup (l ++ r) -> In e l -> In e r -> False.
-  intros;
-  induction l; simpl in *; intuition;
-  invcs H; intuition.
+  intros; induction l; simpl in *; ii; invcs H; intuition.
 Qed.
 
 Program Definition nth_strong T (l : list T) nt (P : nt < length l) : 
@@ -80,11 +78,11 @@ Theorem eq_eq_length T (l r : list T) : l = r -> length l = length r.
   intros; subst; trivial.
 Qed.
 
-Theorem nth_error_eq T (l r : list T) : (forall n, nth_error l n = nth_error r n) <-> l = r.
-  split; intros; subst; trivial; generalize dependent r.
-  induction l; intros; destruct r; trivial; try (specialize(H 0);discriminate).
-  assert(a = t) by (specialize(H 0);invcs H;trivial); subst; f_equal.
-  apply IHl; intros; specialize(H (S n));trivial.
+Theorem nth_error_eq T (l r : list T) : (forall n, nth_error l n = nth_error r n) -> l = r.
+  intros; generalize dependent r.
+  induction l; intros; destruct r; trivial; try (specialize(H 0); discriminate).
+  assert(a = t) by (specialize(H 0); invcs H; trivial); subst; f_equal.
+  apply IHl; intros; specialize(H (S n)); trivial.
 Qed.
 
 Theorem foldl_extract A (F : A -> A -> A) li Z C :
@@ -93,65 +91,29 @@ Theorem foldl_extract A (F : A -> A -> A) li Z C :
     F (fold_left (fun l r => F l r) li Z) C.
   revert Z C.
   induction li; simpl; intros; trivial.
-  rewrite IHli.
-  clear IHli.
-  revert Z a C.
-  induction li; simpl; intros; auto.
-  rewrite (IHli _ a0 a), (IHli _ C a); auto with f_equal.
-  do 2 f_equal.
-  all:auto.
+  rewrite IHli by auto; clear IHli.
+  revert Z a C; induction li; simpl; intros; auto.
+  rewrite (IHli _ a0 a), (IHli _ C a); auto with *.
 Qed.
 
 Theorem last_app : forall T (e : T) m l, last (l ++ [e]) m = e.
-  induction l;
-  try destruct l;
-  simpl in *;
-  trivial.
+  induction l; try destruct l; simpl in *; trivial.
 Qed.
 
 Definition split_tail T (l : list T) : l <> [] -> { r | l = fst r ++ [snd r] }.
-  destruct l.
-  tauto.
-  intros.
+  destruct l; intros; try tauto.
   exists (removelast (t :: l),last (t :: l) t).
-  rewrite app_removelast_last at 1 by assumption.
-  simpl;auto.
+  rewrite app_removelast_last at 1 by assumption; simpl; auto.
 Qed.
 
-Theorem cons_app_tail_eq_length_eq : forall T (l : T) r l' r',
+Theorem cons_app_tail_eq_length_eq T (l : T) r l' r' :
   l :: r = l' ++ [r'] -> length r = length l'.
-  intros.
-  destruct r, l';simpl in *;discriminate||trivial.
+  intros H.
+  destruct r, l'; simpl in *; discriminate || trivial.
+  invcs H; destruct l';discriminate.
   invcs H.
-  destruct l';discriminate.
-  invcs H.
-  destruct l';simpl in *;invcs H2;trivial.
-  rewrite app_length, plus_comm;trivial.
-Qed.
-
-Definition list_rev_rect_inner : forall (A : Type) (P : list A -> Type),
-  P [] -> (forall (a : A) (l : list A), P l -> P (l ++ [a])) -> 
-    forall n (l : list A), n = (length l) -> P l.
-  induction n;
-  intros.
-  destruct l;trivial;discriminate.
-  destruct l.
-  discriminate.
-  inversion H.
-  destruct (@split_tail _ (a :: l)).
-  discriminate.
-  destruct x.
-  subst.
-  simpl in *.
-  rewrite e.
-  apply X0.
-  apply IHn.
-  eapply cons_app_tail_eq_length_eq;eauto.
-Qed.
-
-Definition list_rev_rect { A : Type } (l : list A) (P : list A -> Type) :
-  P [] -> (forall (a : A) (l : list A), P l -> P (l ++ [a])) -> P l.
-  intros;eapply list_rev_rect_inner;eauto.
+  destruct l'; simpl in *; invcs H2; trivial.
+  rewrite app_length, plus_comm; trivial.
 Qed.
 
 Theorem length_eq T (l r : list T) : l = r -> length l = length r.
@@ -162,20 +124,12 @@ Theorem nth_error_tl T (l : list T) n : nth_error (tl l) n = nth_error l (S n).
   destruct l, n;trivial.
 Qed.
 
-Theorem nth_error_hd_error : forall T (l : list T), nth_error l 0 = hd_error l.
-  trivial.
-Qed.
+Theorem nth_error_hd_error : forall T (l : list T), nth_error l 0 = hd_error l. trivial. Qed.
 
 Theorem nth_error_JMeq (LT RT : Type) (l : list LT) (r : list RT) : LT = RT ->
   ((forall n : nat, nth_error l n ~= nth_error r n) <-> l ~= r).
-  intuition;
-  repeat subst;
-  trivial.
-  apply eq_JMeq.
-  apply nth_error_eq.
-  intros.
-  specialize (H0 n).
-  apply JMeq_eq in H0;trivial.
+  intuition; repeat subst; trivial.
+  auto using nth_error_eq, JMeq_eq, eq_JMeq.
 Qed.
 
 Program Definition hd_strong T (l : list T) : 0 < length l -> { e | hd_error l = Some e } :=
@@ -184,26 +138,18 @@ Program Definition hd_strong T (l : list T) : 0 < length l -> { e | hd_error l =
     | [] => !
     | e :: _ => e
     end.
-Next Obligation.
-  simpl in *;omega.
-Qed.
+Next Obligation. simpl in *; omega. Qed.
 
 Theorem l_hd_strong_tl T (l : list T) P : ` (hd_strong l P) :: tl l = l.
-  intros.
-  destruct hd_strong, l;simpl in *;invcs e;trivial.
+  destruct hd_strong, l; simpl in *; invcs e; trivial.
 Qed.
 
-Theorem app_cons : forall T (e : T) l, [e] ++ l = e :: l.
-  trivial.
-Qed.
+Theorem app_cons T (e : T) l : [e] ++ l = e :: l. trivial. Qed.
 
 Theorem foldl_identity A F (l : list A) (E I : A) :
   (forall e, F e I = e) -> (forall e, F I e = e) -> (forall l r, F l r = F r l) -> 
     (forall a b c, F (F a b) c = F (F a c) b) ->
       fold_left F l E = F (fold_left F l I) E.
-  destruct l;intros;simpl in *;rewrite H0 in *;trivial.
-  rewrite <- foldl_extract.
-  f_equal.
-  apply H1.
-  apply H2.
+  destruct l; intros; simpl in *; rewrite H0 in *; trivial; 
+  rewrite <- foldl_extract; auto using f_equal.
 Qed.
