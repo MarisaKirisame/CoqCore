@@ -1,0 +1,1 @@
+BringToFront.v  EqDec.v  MoreJMeq.v  MoreList.v  Tactic.v -R . CoqCore
