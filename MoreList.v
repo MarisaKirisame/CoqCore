@@ -1,7 +1,7 @@
 Require Export List FunctionalExtensionality Tactic Program Omega Arith MoreJMeq.
 Set Implicit Arguments.
 
-Create HintDb MoreList discriminated.
+Create HintDb MoreList.
 Hint Extern 1 => f_equal : MoreList.
 
 Theorem foldl_distr A (F : A -> A -> A) R l : forall a,
@@ -89,18 +89,22 @@ Next Obligation.
   omega.
 Qed.
 
-Theorem eq_eq_length T (l r : list T) : l = r -> length l = length r.
+Theorem eq_length_eq T (l r : list T) : l = r -> length l = length r.
   intros; subst; trivial.
 Qed.
-Hint Resolve eq_eq_length : MoreList.
+Hint Resolve eq_length_eq : MoreList.
 
-Theorem nth_error_eq T (l r : list T) : (forall n, nth_error l n = nth_error r n) -> l = r.
+Theorem nth_error_eq_eq T (l r : list T) : (forall n, nth_error l n = nth_error r n) -> l = r.
   intros; generalize dependent r.
   induction l; intros; destruct r; trivial; try (specialize(H 0); discriminate).
   assert(a = t) by (specialize(H 0); invcs H; trivial); subst; f_equal.
   apply IHl; intros; specialize(H (S n)); trivial.
 Qed.
-Hint Resolve nth_error_eq : MoreList.
+Hint Resolve nth_error_eq_eq : MoreList.
+
+Theorem eq_nth_error_eq T (l r : list T) : l = r -> (forall n, nth_error l n = nth_error r n).
+  intros; subst; trivial.
+Qed.
 
 Theorem foldl_extract A (F : A -> A -> A) li Z C :
   (forall a b c, F (F a b) c = F (F a c) b) ->
@@ -153,8 +157,7 @@ Hint Resolve nth_error_hd_error : MoreList.
 
 Theorem nth_error_JMeq (LT RT : Type) (l : list LT) (r : list RT) : LT = RT ->
   ((forall n : nat, nth_error l n ~= nth_error r n) <-> l ~= r).
-  intuition; repeat subst; trivial.
-  auto using nth_error_eq, JMeq_eq, eq_JMeq.
+  ii; repeat subst; auto with MoreJMeq MoreList.
 Qed.
 Hint Resolve nth_error_JMeq : MoreList.
 
