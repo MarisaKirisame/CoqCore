@@ -1,1 +1,1 @@
-BringToFront.v  EqDec.v  MoreJMeq.v  MoreList.v  Tactic.v -R . CoqCore
+BringToFront.v  EqDec.v  MoreJMeq.v  MoreList.v  Tactic.v MoreForall.v -R . CoqCore -o Makefile
