@@ -35,10 +35,10 @@ Theorem JMeq_extensionality A B C D (l : A -> B) (r : C -> D) :
 Qed.
 Hint Resolve JMeq_extensionality : MoreJMeq.
 
-Definition JMeq_proj1_eq T (A B : T -> Prop) (l : sig A) (r : sig B) :
+Definition eq_proj1_JMeq T (A B : T -> Prop) (l : sig A) (r : sig B) :
   A = B -> ` l = ` r -> l ~= r := $(intuition)$.
 
-Definition eq_JMeq_proj1_eq T (A B : T -> Prop) (l : sig A) (r : sig B) :
+Definition JMeq_proj1_eq T (A B : T -> Prop) (l : sig A) (r : sig B) :
   A = B -> l ~= r -> ` l = ` r := $(intuition)$.
 
-Hint Resolve JMeq_proj1_eq eq_JMeq_proj1_eq : MoreJMeq.
+Hint Resolve JMeq_proj1_eq JMeq_proj1_eq : MoreJMeq.
