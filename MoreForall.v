@@ -83,4 +83,4 @@ Ltac ForallInvcs :=
     | |- Forall _ (_ ++ _) => apply Forall_app
     end;
     simpl in *;
-    intuition).
+    ii).
