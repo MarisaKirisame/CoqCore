@@ -84,3 +84,13 @@ Ltac cleanP T := let F := (fun x => isProp x; T x) in cleanT F.
 
 Ltac cleanPS T := 
   let F := (fun x => let Te := (removeone x; T) in solvable x Te) in cleanP F.
+
+Require Export Classical.
+Ltac DestructPremise :=
+  match goal with
+  | H : forall _ : ?X, ?Y |- _ => 
+      match Y with
+      | False => fail 1
+      | _ => let F := fresh in destruct (classic X) as [F|F];[specialize (H F)|clear H]
+      end
+  end.
