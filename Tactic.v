@@ -94,3 +94,4 @@ Ltac DestructPremise :=
       | _ => let F := fresh in destruct (classic X) as [F|F];[specialize (H F)|clear H]
       end
   end.
+Ltac ext := let f := fresh in extensionality f.
