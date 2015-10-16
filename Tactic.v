@@ -1,7 +1,7 @@
-Require Export List.
+Require Export List FunctionalExtensionality.
 Set Implicit Arguments.
 
-Ltac invcs H := inversion H;clear H;repeat subst.
+Ltac invcs H := inversion H; clear H; repeat subst.
 
 Ltac invcsSome := repeat match goal with H : Some _ = Some _ |- _ => invcs H end.
 

@@ -82,6 +82,7 @@ Ltac ForallInvcs :=
     | H : Forall _ [] |- _ => clear H
     | |- Forall _ (_ :: _) => constructor
     | |- Forall _ (_ ++ _) => apply Forall_app
+    | |- Forall _ [] => constructor
     end;
     simpl in *;
     ii).
