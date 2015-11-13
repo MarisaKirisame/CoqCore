@@ -20,6 +20,11 @@ Ltac InInvcs :=
 Ltac get_goal := match goal with |- ?x => x end.
 
 Ltac get_match H F := match H with context [match ?n with _ => _ end] => F n end.
+Ltac no_inner_match_smart_destruct T :=
+  (is_var T; destruct T) ||
+  (let F := fresh in destruct T eqn:?F;
+  match type of F with ?Term = _ => let F' x := fail 3 in try get_match Term F' end;
+  match type of F with ?Term = _ :> {_} + {_} => clear F | _ => idtac end).
 
 Ltac get_matches F := 
   match goal with
@@ -28,10 +33,10 @@ Ltac get_matches F :=
   end.
 
 Ltac match_context_destruct C :=
-  let F := (fun x => destruct x eqn:?) in get_match C F.
+  let F := no_inner_match_smart_destruct in get_match C F.
 
 Ltac match_type_context_destruct T C :=
-  let F := (fun x => let x' := type of x in match x' with T => destruct x eqn:? end) in
+  let F := (fun x => let x' := type of x in no_inner_match_smart_destruct) in
     get_match C F.
 
 Definition box P NT (N : NT) : Type := P.
@@ -62,10 +67,11 @@ Ltac get_result N := match goal with | _ := ?X : box _ N |- _ => X end.
 Ltac clear_result N := match goal with | H := _ : box _ N |- _ => clear H end.
 
 Ltac match_type_destruct T :=
-  let F := (fun x => let x' := type of x in match x' with T => destruct x eqn:? end) in
+  let F := (fun x => 
+    let x' := type of x in match x' with T => no_inner_match_smart_destruct end) in
     get_matches F.
 
-Ltac match_destruct := let F := (fun x => destruct x eqn:?) in get_matches F.
+Ltac match_destruct := get_matches no_inner_match_smart_destruct.
 
 Ltac cleanT T := 
   repeat match goal with
@@ -95,3 +101,6 @@ Ltac DestructPremise :=
       end
   end.
 Ltac ext := let f := fresh in extensionality f.
+
+Ltac Apply T := match goal with H : _ |- _ => apply T in H end.
+Ltac EApply T := match goal with H : _ |- _ => eapply T in H end.

@@ -3,7 +3,7 @@ Require Import Program.
 Set Implicit Arguments.
 
 Theorem Forall_split T P (a : T) l : Forall P (a::l) <-> P a /\ Forall P l.
-  intuition;inversion H;tauto.
+  intuition; inversion H; tauto.
 Qed.
 
 Program Fixpoint In_map { A B } (l : list A) (f : forall a, In a l -> B) : list B := 
@@ -75,14 +75,11 @@ Theorem Forall_app T P (l r : list T) : Forall P (l ++ r) <-> Forall P l /\ Fora
 Qed.
 
 Ltac ForallInvcs := 
-  repeat 
-    (try match goal with
-    | H : Forall _ (_ :: _) |- _ => invcs H
-    | H : Forall _ (_ ++ _) |- _ => apply Forall_app in H; destruct H
-    | H : Forall _ [] |- _ => clear H
-    | |- Forall _ (_ :: _) => constructor
-    | |- Forall _ (_ ++ _) => apply Forall_app
-    | |- Forall _ [] => constructor
-    end;
-    simpl in *;
-    ii).
+  match goal with
+  | H : Forall _ (_ :: _) |- _ => invcs H
+  | H : Forall _ (_ ++ _) |- _ => apply Forall_app in H; destruct H
+  | H : Forall _ [] |- _ => clear H
+  | |- Forall _ (_ :: _) => constructor
+  | |- Forall _ (_ ++ _) => apply Forall_app
+  | |- Forall _ [] => constructor
+  end.

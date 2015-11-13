@@ -185,3 +185,44 @@ Theorem foldl_identity A F (l : list A) (E I : A) :
   rewrite <- foldl_extract; auto using f_equal.
 Qed.
 Hint Resolve foldl_identity : MoreList.
+
+Definition map_eq_app A B (F : A -> B) x l r :
+  map F x = l ++ r -> { p | fst p ++ snd p = x /\ map F (fst p) = l /\ map F (snd p) = r }.
+  dependent induction x; intros; simpl in *;
+  try solve [exists (@nil A, @nil A); destruct l, r; simpl in *; tauto || discriminate].
+  destruct l; simpl in *; invcs H; try solve [exists (@nil A, a :: x); simpl in *; ii].
+  Apply IHx; destruct H2 as [[]]; simpl in *; ii; subst.
+  exists (a :: l0, l1); simpl; ii.
+Defined.
+
+Definition map_eq_cons A B (F : A -> B) x l r :
+  map F x = l :: r -> { p | fst p :: snd p = x /\ F (fst p) = l /\ map F (snd p) = r }.
+  destruct x; intros; simpl in *; invcs H.
+  exists (a, x); ii.
+Defined.
+
+Definition app_eq_app A (ll lr rl rr : list A) : ll ++ lr = rl ++ rr ->
+  { l' | ll = rl ++ l' /\ l' ++ lr = rr } + { r' | rl = ll ++ r' /\ r' ++ rr = lr }.
+  dependent induction ll; intros; simpl in *; subst; try solve [right; exists rl; tauto].
+  destruct rl; simpl in *; invcs H; try solve [left; exists (a :: ll); ii].
+  destruct (IHll _ _ _ H2) as [[? []]|[? []]]; subst;
+  left + right; solve [exists x; ii].
+Defined.
+
+Ltac ListInvcs := 
+  match goal with
+  | H : [] = [] |- _ => clear H
+  | H : _ :: _ = _ :: _ |- _ => invcs H
+  | H : ?L ++ _ = _ :: _ |- _ => destruct L eqn:?; invcs H
+  | H : _ :: _ = ?L ++ _ |- _ => destruct L eqn:?; invcs H
+  | H : map _ _ = _ ++ _ |- _ => 
+      destruct (map_eq_app _ _ _ _ H) as [[] [? []]]; subst_no_fail; clear H
+  | H : _ ++ _ = map _ _ |- _ => 
+      destruct (map_eq_app _ _ _ _ H) as [[] [? []]]; subst_no_fail; clear H
+  | H : map _ _ = _ :: _ |- _ => 
+      destruct (map_eq_cons _ _ H) as [[] [? []]]; subst_no_fail; clear H
+  | H : map _ _ = [] |- _ => apply map_eq_nil in H
+  | H : [] = map _ _ |- _ => apply map_eq_nil in H
+  | H : ?LL ++ ?LR = ?RL ++ ?RR |- _ => 
+      destruct (app_eq_app LL LR RL RR H) as [[? []]|[? []]]; subst_no_fail; clear H
+  end.
