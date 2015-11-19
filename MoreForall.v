@@ -1,4 +1,4 @@
-Require Export List ProofIrrelevance Permutation Tactic.
+Require Export List ProofIrrelevance Permutation Tactic Classical.
 Require Import Program.
 Set Implicit Arguments.
 
@@ -82,4 +82,24 @@ Ltac ForallInvcs :=
   | |- Forall _ (_ :: _) => constructor
   | |- Forall _ (_ ++ _) => apply Forall_app
   | |- Forall _ [] => constructor
+  end.
+
+Theorem Exists_app T P (l r : list T) : Exists P (l ++ r) <-> Exists P l \/ Exists P r.
+  intuition.
+  + induction l; invcs H; simpl in *; subst; ii; eauto.
+  + induction l; invcs H0; simpl in *; eauto.
+  + induction l; invcs H0; simpl in *; eauto.
+Qed.
+
+Definition Exists_cons T P l (r : list T) : Exists P (l :: r) <-> P l \/ Exists P r := 
+  $(intuition; invcs H; eauto)$.
+
+Ltac ExistInvcs := 
+  match goal with
+  | H : Exists _ (_ :: _) |- _ => invcs H
+  | H : Exists _ (_ ++ _) |- _ => apply Exists_app in H; destruct H
+  | H : Exists _ [] |- _ => invcs H
+  | |- Exists _ (_ :: _) => apply Exists_cons
+  | |- Exists _ (_ ++ _) => apply Exists_app
+  | |- Exists _ [] => exfalso
   end.
