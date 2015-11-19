@@ -128,7 +128,7 @@ Definition forallb_Exists (A : Type) (f : A -> bool) (l : list A) :
     repeat match_destruct; congruence || ii.
 Qed.
 
-Ltac ExistInvcs := 
+Ltac ExistsInvcs := 
   match goal with
   (*branch0*)
   | H : Exists _ [] |- _ => invcs H
