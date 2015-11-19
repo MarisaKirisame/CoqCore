@@ -74,14 +74,38 @@ Theorem Forall_app T P (l r : list T) : Forall P (l ++ r) <-> Forall P l /\ Fora
   simpl; intuition.
 Qed.
 
+Definition forallb_Forall (A : Type) (f : A -> bool) (l : list A) :
+  forallb f l = true <-> Forall (fun x => f x = true) l.
+  induction l; ii; simpl in *; repeat constructor;
+  unfold andb in *; repeat match_destruct; try congruence; ii.
+  invcs H1; auto.
+  invcs H1; congruence.
+Qed.
+
+Definition ForallJoin (T : Type) (L R : T -> Prop) l : 
+  Forall L l -> Forall R l -> Forall (fun x => L x /\ R x) l.
+  intros; induction l; simpl in *; constructor; invcs H; invcs H0; ii.
+Qed.
+
+Definition Exists_Forall_neg_classic A (P : A -> Prop) l :
+  Exists (fun x => ~ P x) l <-> ~ Forall P l := Exists_Forall_neg _ _ (fun x => classic (P x)).
+
 Ltac ForallInvcs := 
   match goal with
+  (*branch0*)
+  | |- Forall _ [] => constructor
+  (*branch1*)
   | H : Forall _ (_ :: _) |- _ => invcs H
   | H : Forall _ (_ ++ _) |- _ => apply Forall_app in H; destruct H
   | H : Forall _ [] |- _ => clear H
+  | H : forallb _ _ = true |- _ => apply forallb_Forall in H
+  | |- forallb _ _ = true => apply forallb_Forall
+  | HL : Forall _ _, HR : Forall _ _ |- _ => pose proof (ForallJoin HL HR); clear HL HR
+  | H : ~Forall _ _ |- _ => apply Exists_Forall_neg_classic in H
+  | |- ~Forall _ _ => apply Exists_Forall_neg_classic
+  (*branch2*)
   | |- Forall _ (_ :: _) => constructor
   | |- Forall _ (_ ++ _) => apply Forall_app
-  | |- Forall _ [] => constructor
   end.
 
 Theorem Exists_app T P (l r : list T) : Exists P (l ++ r) <-> Exists P l \/ Exists P r.
@@ -94,12 +118,29 @@ Qed.
 Definition Exists_cons T P l (r : list T) : Exists P (l :: r) <-> P l \/ Exists P r := 
   $(intuition; invcs H; eauto)$.
 
+Definition forallb_Exists (A : Type) (f : A -> bool) (l : list A) :
+  forallb f l = false <-> Exists (fun x => f x = false) l.
+  split.
+  + induction l; intros; simpl in *; try congruence;
+    unfold andb in *; repeat match_destruct;
+    left + right; solve [ii].
+  + induction l; intro H; invcs H; simpl in *; unfold andb; 
+    repeat match_destruct; congruence || ii.
+Qed.
+
 Ltac ExistInvcs := 
   match goal with
+  (*branch0*)
   | H : Exists _ [] |- _ => invcs H
+  (*branch1*)
   | |- Exists _ [] => exfalso
+  | H : forallb _ _ = true |- _ => apply forallb_Exists in H
+  | |- forallb _ _ = true => apply forallb_Exists
+  | H : ~Exists _ _ |- _ => apply Forall_Exists_neg in H
+  | |- ~Exists _ _ => apply Forall_Exists_neg
+  (*branch2*)
   | |- Exists _ (_ :: _) => apply Exists_cons
   | |- Exists _ (_ ++ _) => apply Exists_app
   | H : Exists _ (_ :: _) |- _ => invcs H
-  | H : Exists _ (_ ++ _) |- _ => apply Exists_app in H; destruct H
+  | H : Exists _ (_ ++ _) |- _ => apply Exists_app in H
   end.
