@@ -151,8 +151,8 @@ Ltac ExistsInvcs :=
   | |- ~Exists _ _ => apply Forall_Exists_neg
   | H : Exists _ _ -> False |- _ => apply Forall_Exists_neg in H
   | |- Exists _ _ -> False => apply Forall_Exists_neg
-  | H : Forall _ (map _ _) |- _ => apply map_Exists in H
-  | |- Forall _ (map _ _) => apply map_Exists
+  | H : Exists _ (map _ _) |- _ => apply map_Exists in H
+  | |- Exists _ (map _ _) => apply map_Exists
   (*branch2*)
   | |- Exists _ (_ :: _) => apply Exists_cons
   | |- Exists _ (_ ++ _) => apply Exists_app
