@@ -104,7 +104,6 @@ Ltac ForallInvcs :=
   | H : Forall _ [] |- _ => clear H
   | H : forallb _ _ = true |- _ => apply forallb_Forall in H
   | |- forallb _ _ = true => apply forallb_Forall
-  | HL : Forall _ _, HR : Forall _ _ |- _ => pose proof (ForallJoin HL HR); clear HL HR
   | H : ~Forall _ _ |- _ => apply Exists_Forall_neg_classic in H
   | |- ~Forall _ _ => apply Exists_Forall_neg_classic
   | H : Forall _ _ -> False |- _ => apply Exists_Forall_neg_classic in H
