@@ -103,6 +103,8 @@ Ltac ForallInvcs :=
   | HL : Forall _ _, HR : Forall _ _ |- _ => pose proof (ForallJoin HL HR); clear HL HR
   | H : ~Forall _ _ |- _ => apply Exists_Forall_neg_classic in H
   | |- ~Forall _ _ => apply Exists_Forall_neg_classic
+  | H : Forall _ _ -> False |- _ => apply Exists_Forall_neg_classic in H
+  | |- Forall _ _ -> False => apply Exists_Forall_neg_classic
   (*branch2*)
   | |- Forall _ (_ :: _) => constructor
   | |- Forall _ (_ ++ _) => apply Forall_app
@@ -137,7 +139,8 @@ Ltac ExistsInvcs :=
   | H : forallb _ _ = false |- _ => apply forallb_Exists in H
   | |- forallb _ _ = false => apply forallb_Exists
   | H : ~Exists _ _ |- _ => apply Forall_Exists_neg in H
-  | |- ~Exists _ _ => apply Forall_Exists_neg
+  | H : Exists _ _ -> False |- _ => apply Forall_Exists_neg in H
+  | |- Exists _ _ -> False => apply Forall_Exists_neg
   (*branch2*)
   | |- Exists _ (_ :: _) => apply Exists_cons
   | |- Exists _ (_ ++ _) => apply Exists_app
