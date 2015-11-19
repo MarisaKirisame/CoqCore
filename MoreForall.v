@@ -139,6 +139,7 @@ Ltac ExistsInvcs :=
   | H : forallb _ _ = false |- _ => apply forallb_Exists in H
   | |- forallb _ _ = false => apply forallb_Exists
   | H : ~Exists _ _ |- _ => apply Forall_Exists_neg in H
+  | |- ~Exists _ _ => apply Forall_Exists_neg
   | H : Exists _ _ -> False |- _ => apply Forall_Exists_neg in H
   | |- Exists _ _ -> False => apply Forall_Exists_neg
   (*branch2*)
