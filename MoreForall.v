@@ -90,6 +90,10 @@ Qed.
 Definition Exists_Forall_neg_classic A (P : A -> Prop) l :
   Exists (fun x => ~ P x) l <-> ~ Forall P l := Exists_Forall_neg _ _ (fun x => classic (P x)).
 
+Definition map_Forall A B (F : A -> B) P l : Forall P (map F l) <-> Forall (P ∘ F) l.
+  ii; induction l; simpl in *; constructor; invcs H; ii.
+Defined.
+
 Ltac ForallInvcs := 
   match goal with
   (*branch0*)
@@ -105,6 +109,8 @@ Ltac ForallInvcs :=
   | |- ~Forall _ _ => apply Exists_Forall_neg_classic
   | H : Forall _ _ -> False |- _ => apply Exists_Forall_neg_classic in H
   | |- Forall _ _ -> False => apply Exists_Forall_neg_classic
+  | H : Forall _ (map _ _) |- _ => apply map_Forall in H
+  | |- Forall _ (map _ _) => apply map_Forall
   (*branch2*)
   | |- Forall _ (_ :: _) => constructor
   | |- Forall _ (_ ++ _) => apply Forall_app
@@ -130,6 +136,10 @@ Definition forallb_Exists (A : Type) (f : A -> bool) (l : list A) :
     repeat match_destruct; congruence || ii.
 Qed.
 
+Definition map_Exists A B (F : A -> B) P l : Exists P (map F l) <-> Exists (P ∘ F) l.
+  ii; induction l; simpl in *; invcs H; ii; eauto.
+Defined.
+
 Ltac ExistsInvcs := 
   match goal with
   (*branch0*)
@@ -142,6 +152,8 @@ Ltac ExistsInvcs :=
   | |- ~Exists _ _ => apply Forall_Exists_neg
   | H : Exists _ _ -> False |- _ => apply Forall_Exists_neg in H
   | |- Exists _ _ -> False => apply Forall_Exists_neg
+  | H : Forall _ (map _ _) |- _ => apply map_Exists in H
+  | |- Forall _ (map _ _) => apply map_Exists
   (*branch2*)
   | |- Exists _ (_ :: _) => apply Exists_cons
   | |- Exists _ (_ ++ _) => apply Exists_app
