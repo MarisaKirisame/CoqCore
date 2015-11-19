@@ -96,10 +96,10 @@ Definition Exists_cons T P l (r : list T) : Exists P (l :: r) <-> P l \/ Exists 
 
 Ltac ExistInvcs := 
   match goal with
-  | H : Exists _ (_ :: _) |- _ => invcs H
-  | H : Exists _ (_ ++ _) |- _ => apply Exists_app in H; destruct H
   | H : Exists _ [] |- _ => invcs H
+  | |- Exists _ [] => exfalso
   | |- Exists _ (_ :: _) => apply Exists_cons
   | |- Exists _ (_ ++ _) => apply Exists_app
-  | |- Exists _ [] => exfalso
+  | H : Exists _ (_ :: _) |- _ => invcs H
+  | H : Exists _ (_ ++ _) |- _ => apply Exists_app in H; destruct H
   end.
