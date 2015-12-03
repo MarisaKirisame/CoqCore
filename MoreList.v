@@ -209,6 +209,37 @@ Definition app_eq_app A (ll lr rl rr : list A) : ll ++ lr = rl ++ rr ->
   left + right; solve [exists x; ii].
 Defined.
 
+Fixpoint split_sum L R (l : list (L + R)) : list L * list R :=
+  match l with
+  | [] => ([],[])
+  | inl h :: t => let (l', r') := split_sum t in (h :: l', r')
+  | inr h :: t => let (l', r') := split_sum t in (l', h :: r')
+  end.
+
+Definition split_sum_In_fst L R (l : list (L + R)) t : 
+  In (inl t) l <-> In t (fst (split_sum l)).
+  split; induction l; intros; simpl in *; trivial; ii; subst; simpl in *;
+  destruct split_sum eqn:?; simpl in *; ii.
+  destruct a; simpl in *; ii; subst; ii.
+Defined.
+
+Definition split_sum_In_snd L R (l : list (L + R)) t : 
+  In (inr t) l <-> In t (snd (split_sum l)).
+  split; induction l; intros; simpl in *; trivial; ii; subst; simpl in *;
+  destruct split_sum eqn:?; simpl in *; ii.
+  destruct a; simpl in *; ii; subst; ii.
+Defined.
+
+Definition Exists_dec_cons (A : Type) (P : A -> Prop) (l : list A) :
+  (forall x : A, { P x } + { ~P x }) -> {x | P x /\ In x l} + { ~Exists P l }.
+  induction l; intuition idtac.
+  right; intros; inversion H.
+  destruct a0; intuition eauto with *.
+  destruct (X a); [intuition eauto with *|].
+  right; intros; inversion H; eauto.
+Defined.
+
+
 Ltac ListInvcs := 
   match goal with
   | H : [] = [] |- _ => clear H
