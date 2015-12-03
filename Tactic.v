@@ -92,14 +92,18 @@ Ltac cleanPS T :=
   let F := (fun x => let Te := (removeone x; T) in solvable x Te) in cleanP F.
 
 Require Export Classical.
-Ltac DestructPremise :=
+Ltac DestructPremise H X :=
+  let F := fresh in destruct (classic X) as [F|];[specialize (H F)|clear H].
+Ltac FindDestructPremise :=
   match goal with
-  | H : forall _ : ?X, ?Y |- _ => 
+  | H : ?X -> ?Y |- _ => 
       match Y with
       | False => fail 1
-      | _ => let F := fresh in destruct (classic X) as [F|F];[specialize (H F)|clear H]
+      | _ => DestructPremise H X
       end
+  | H : forall A : ?X, ?Y |- _ => DestructPremise H X
   end.
+
 Ltac ext := let f := fresh in extensionality f.
 
 Ltac Apply T := match goal with H : _ |- _ => apply T in H end.
