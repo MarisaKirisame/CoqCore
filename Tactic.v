@@ -20,6 +20,7 @@ Ltac InInvcs :=
 Ltac get_goal := match goal with |- ?x => x end.
 
 Ltac get_match H F := match H with context [match ?n with _ => _ end] => F n end.
+
 Ltac no_inner_match_smart_destruct T :=
   (is_var T; destruct T) ||
   (let F := fresh in destruct T eqn:?F;
@@ -68,7 +69,7 @@ Ltac clear_result N := match goal with | H := _ : box _ N |- _ => clear H end.
 
 Ltac match_type_destruct T :=
   let F := (fun x => 
-    let x' := type of x in match x' with T => no_inner_match_smart_destruct end) in
+    let x' := type of x in match x' with T => no_inner_match_smart_destruct x end) in
     get_matches F.
 
 Ltac match_destruct := get_matches no_inner_match_smart_destruct.
@@ -92,16 +93,14 @@ Ltac cleanPS T :=
   let F := (fun x => let Te := (removeone x; T) in solvable x Te) in cleanP F.
 
 Require Export Classical.
-Ltac DestructPremise H X :=
-  let F := fresh in destruct (classic X) as [F|];[specialize (H F)|clear H].
-Ltac FindDestructPremise :=
+Ltac DestructPremise :=
   match goal with
-  | H : ?X -> ?Y |- _ => 
-      match Y with
-      | False => fail 1
-      | _ => DestructPremise H X
-      end
-  | H : forall A : ?X, ?Y |- _ => DestructPremise H X
+  | H : ?T |- _ => 
+    match T with
+    | _ -> False => fail 1
+    | forall A : ?X, ?Y => let F := fresh in
+            destruct (classic X) as [F| ]; [ specialize (H F) | clear H ]
+    end
   end.
 
 Ltac ext := let f := fresh in extensionality f.
