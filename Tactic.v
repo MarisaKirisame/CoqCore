@@ -106,3 +106,8 @@ Ltac ext := let f := fresh in extensionality f.
 
 Ltac Apply T := match goal with H : _ |- _ => apply T in H end.
 Ltac EApply T := match goal with H : _ |- _ => eapply T in H end.
+
+Ltac existsDestruct :=
+  repeat match goal with 
+  | H : exists _, _ |- _ => destruct H
+  end.

@@ -159,3 +159,11 @@ Ltac ExistsInvcs :=
   | H : Exists _ (_ :: _) |- _ => invcs H
   | H : Exists _ (_ ++ _) |- _ => apply Exists_app in H
   end.
+
+Ltac Forall2Invcs :=
+  match goal with
+  | H : Forall2 _ [] _ |- _ => invcs H
+  | H : Forall2 _ (_::_) _ |- _ => invcs H
+  | H : Forall2 _ _ [] |- _ => invcs H
+  | H : Forall2 _ _ (_::_) |- _ => invcs H
+  end.

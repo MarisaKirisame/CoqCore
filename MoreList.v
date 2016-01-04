@@ -1,4 +1,5 @@
 Require Export List FunctionalExtensionality Tactic Program Omega Arith MoreJMeq.
+Require Vector.
 Set Implicit Arguments.
 
 Create HintDb MoreList.
@@ -257,3 +258,22 @@ Ltac ListInvcs :=
   | H : ?LL ++ ?LR = ?RL ++ ?RR |- _ => 
       destruct (app_eq_app LL LR RL RR H) as [[? []]|[? []]]; subst_no_fail; clear H
   end.
+
+Definition VectorCase0Eq T l : l = Vector.nil T.
+  apply (Vector.case0 (fun x => x = _)); ii.
+Qed.
+
+Definition VectorCaseSEq T n (l : Vector.t T (S n)) :
+  exists h t, l = Vector.cons _ h _ t.
+  apply (Vector.caseS' l); eauto.
+Qed.
+
+Definition VectorToListEq : forall T n (l r : Vector.t T n), 
+  Vector.to_list l = Vector.to_list r -> l = r.
+  dependent induction n; ii.
+  pose proof (VectorCase0Eq l); subst.
+  pose proof (VectorCase0Eq r); subst; ii.
+  pose proof (VectorCaseSEq l); existsDestruct; subst.
+  pose proof (VectorCaseSEq r); existsDestruct; subst.
+  unfold Vector.to_list in *; invcs H; f_equal; auto.
+Qed.
