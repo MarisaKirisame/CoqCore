@@ -111,3 +111,5 @@ Ltac existsDestruct :=
   repeat match goal with 
   | H : exists _, _ |- _ => destruct H
   end.
+
+Ltac SomeInvcs := match goal with H : Some _ = Some _ |- _ => invcs H end.
