@@ -106,8 +106,6 @@ Ltac existsDestruct :=
   | H : exists _, _ |- _ => destruct H
   end.
 
-Ltac SomeInvcs := repeat match goal with H : Some _ = Some _ |- _ => invcs H end.
-
 Ltac DestructEPair p :=
   match type of p with
   | (?lT*?rT)%type => 
