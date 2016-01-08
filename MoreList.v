@@ -8,7 +8,7 @@ Hint Extern 1 => f_equal : MoreList.
 Theorem foldl_distr A (F : A -> A -> A) R l : forall a,
   (forall r l, R (F l r) = F (R l) (R r)) ->
     fold_left (fun l r => F l (R r)) l (R a) = R (fold_left F l a).
-  induction l; simpl in *; subst; intuition.
+  induction l; simpl in *; subst; ii.
   replace (F (R a0) (R a)) with (R (F a0 a)) by auto; auto.
 Qed.
 Hint Resolve foldl_distr : MoreList.
@@ -153,7 +153,7 @@ Qed.
 Hint Resolve nth_error_tl : MoreList.
 
 Definition nth_error_hd_error : forall T (l : list T), nth_error l 0 = hd_error l := 
-  $(trivial)$.
+  ltac:(trivial).
 Hint Resolve nth_error_hd_error : MoreList.
 
 Theorem nth_error_JMeq (LT RT : Type) (l : list LT) (r : list RT) : LT = RT ->
@@ -175,7 +175,7 @@ Theorem l_hd_strong_tl T (l : list T) P : ` (hd_strong l P) :: tl l = l.
 Qed.
 Hint Resolve l_hd_strong_tl : MoreList.
 
-Definition app_cons T (e : T) l : [e] ++ l = e :: l := $(trivial)$.
+Definition app_cons T (e : T) l : [e] ++ l = e :: l := ltac:(trivial).
 Hint Resolve app_cons : MoreList.
 
 Theorem foldl_identity A F (l : list A) (E I : A) :
@@ -263,17 +263,22 @@ Definition VectorCase0Eq T l : l = Vector.nil T.
   apply (Vector.case0 (fun x => x = _)); ii.
 Qed.
 
+Hint Extern 0 => FindDestructEPair.
 Definition VectorCaseSEq T n (l : Vector.t T (S n)) :
-  exists h t, l = Vector.cons _ h _ t.
+  { res | l = Vector.cons _ (fst res) _ (snd res) }.
   apply (Vector.caseS' l); eauto.
 Qed.
 
+Ltac sigDestruct := repeat match goal with X : sig _ |- _ => destruct X end.
+
+Ltac VectorInv :=
+  repeat match goal with
+  | X : Vector.t _ 0 |- _ => pose proof (VectorCase0Eq X); subst
+  | X : Vector.t _ (S _) |- _ => pose proof (VectorCaseSEq X); sigDestruct; subst
+  end.
+
 Definition VectorToListEq : forall T n (l r : Vector.t T n), 
   Vector.to_list l = Vector.to_list r -> l = r.
-  dependent induction n; ii.
-  pose proof (VectorCase0Eq l); subst.
-  pose proof (VectorCase0Eq r); subst; ii.
-  pose proof (VectorCaseSEq l); existsDestruct; subst.
-  pose proof (VectorCaseSEq r); existsDestruct; subst.
+  dependent induction n; ii; VectorInv; trivial.
   unfold Vector.to_list in *; invcs H; f_equal; auto.
 Qed.

@@ -123,7 +123,7 @@ Theorem Exists_app T P (l r : list T) : Exists P (l ++ r) <-> Exists P l \/ Exis
 Qed.
 
 Definition Exists_cons T P l (r : list T) : Exists P (l :: r) <-> P l \/ Exists P r := 
-  $(intuition; invcs H; eauto)$.
+  ltac:(intuition; invcs H; eauto).
 
 Definition forallb_Exists (A : Type) (f : A -> bool) (l : list A) :
   forallb f l = false <-> Exists (fun x => f x = false) l.

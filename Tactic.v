@@ -3,8 +3,6 @@ Set Implicit Arguments.
 
 Ltac invcs H := inversion H; clear H; repeat subst.
 
-Ltac invcsSome := repeat match goal with H : Some _ = Some _ |- _ => invcs H end.
-
 Ltac decExists := repeat match goal with H : exists _, _ |- _ => destruct H end.
 
 Ltac ii := intuition idtac.
@@ -13,7 +11,7 @@ Ltac InInvcs :=
   repeat(
     simpl in *; ii;
     try match goal with
-    | H : In _ (_ ++ _) |- _ => apply in_app_iff in H;destruct H
+    | H : In _ (_ ++ _) |- _ => apply in_app_iff in H; destruct H
     | |- In _ (_ ++ _) => apply in_app_iff
     end).
 
@@ -37,8 +35,7 @@ Ltac match_context_destruct C :=
   let F := no_inner_match_smart_destruct in get_match C F.
 
 Ltac match_type_context_destruct T C :=
-  let F := (fun x => let x' := type of x in no_inner_match_smart_destruct) in
-    get_match C F.
+  get_match C ltac:(fun x => let x' := type of x in no_inner_match_smart_destruct).
 
 Definition channel P NT (N : NT) : Type := P.
 
@@ -46,7 +43,7 @@ Arguments channel : simpl never.
 
 Inductive sandbox_closer : Prop := ms : sandbox_closer -> sandbox_closer.
 
-Definition sandbox_closer_exit : sandbox_closer -> False := $(induction 1; trivial)$.
+Definition sandbox_closer_exit : sandbox_closer -> False := ltac:(induction 1; trivial).
 
 Ltac set_result N T := match goal with | _ := ?X : channel _ N |- _ => unify X T end.
 
@@ -67,9 +64,7 @@ Ltac exit_sandbox :=
   end.
 
 Ltac match_type_destruct T :=
-  let F := (fun x => 
-    let x' := type of x in match x' with T => no_inner_match_smart_destruct x end) in
-    get_matches F.
+  get_matches ltac:(fun x => match type of x with T => no_inner_match_smart_destruct x end).
 
 Ltac match_destruct := get_matches no_inner_match_smart_destruct.
 
@@ -82,14 +77,13 @@ Ltac removeone H := match goal with X : H |- _ => clear X end.
 
 Ltac solvable G T := let f := fresh in assert(f : G) by T; clear f.
 
-Ltac cleanTS T := let F := (fun x => let Te := (removeone x; T) in solvable x Te) in cleanT F.
+Ltac cleanTS T := cleanT ltac:(fun x => solvable x ltac:(removeone x; T)).
 
 Ltac isProp X := match type of X with Prop => idtac end.
 
-Ltac cleanP T := let F := (fun x => isProp x; T x) in cleanT F.
+Ltac cleanP T := cleanT ltac:(fun x => isProp x; T x).
 
-Ltac cleanPS T := 
-  let F := (fun x => let Te := (removeone x; T) in solvable x Te) in cleanP F.
+Ltac cleanPS T := cleanP ltac:(fun x => solvable x ltac:(removeone x; T)).
 
 Require Export Classical.
 Ltac DestructPremise :=
@@ -112,4 +106,73 @@ Ltac existsDestruct :=
   | H : exists _, _ |- _ => destruct H
   end.
 
-Ltac SomeInvcs := match goal with H : Some _ = Some _ |- _ => invcs H end.
+Ltac SomeInvcs := repeat match goal with H : Some _ = Some _ |- _ => invcs H end.
+
+Ltac DestructEPair p :=
+  match type of p with
+  | (?lT*?rT)%type => 
+      let l := fresh in 
+      let r := fresh in 
+        evar (l : lT); 
+        evar (r : rT); 
+        unify p (l, r);
+        simpl
+  end.
+
+Ltac FindDestructEPair :=
+  match goal with
+  | X : _ |- _ => match X with context [?l] => DestructEPair l end
+  | |- ?X => match X with context [?l] => DestructEPair l end
+  end.
+
+Ltac rewriteTerm T := 
+  match goal with
+  | H : T = T |- _ => clear H
+  | H : _ = T |- _ => rewrite H in *
+  | H : T = _ |- _ => rewrite <- H in *
+  end.
+
+Ltac DestructPair := repeat match goal with X : _ * _ |- _ => destruct X end.
+
+Ltac SplitOrGoal := 
+  match goal with
+  | |- ?l \/ ?r => destruct (classic l); [left; assumption|right]
+  end.
+
+Ltac Not H := try (H; fail 1).
+
+Ltac ConstructorInvcs H := 
+  simplify_eq H; 
+  let H' := fresh in
+    intro H';
+    Not ltac:(constr_eq ltac:(type of H) ltac:(type of H'));
+    clear H.
+
+Ltac FindConstructorInvcs := repeat match goal with H : _ |- _ => ConstructorInvcs H end.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-Require Import Program Permutation List EqDec Tactic Classical.
+Require Import Program Permutation List Tactic EqDec Classical.
 
 Definition bring_to_front_type { T } (dec : eq_dec T) e (l : list T) : In e l -> 
   { lr : (list T) * (list T) | (fst lr) ++ e :: snd lr = l /\ ~In e (fst lr) }.
