@@ -149,30 +149,3 @@ Ltac ConstructorInvcs H :=
     clear H.
 
 Ltac FindConstructorInvcs := repeat match goal with H : _ |- _ => ConstructorInvcs H end.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
